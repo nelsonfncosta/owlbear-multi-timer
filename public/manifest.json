@@ -1,0 +1,14 @@
+{
+	"name": "Multi Timer",
+	"version": "1.0.0",
+	"manifest_version": 1,
+	"author": "@nelsonfncosta",
+	"description": "Run and manage multiple timers inside Owlbear Rodeo.",
+	"action": {
+		"title": "Multi Timer",
+		"icon": "/icons.svg",
+		"popover": "/",
+		"width": 420,
+		"height": 640
+	}
+}
