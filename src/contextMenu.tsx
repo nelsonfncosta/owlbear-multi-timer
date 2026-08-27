@@ -1,7 +1,5 @@
 import OBR from "@owlbear-rodeo/sdk";
-
-const ID = "com.owlbearrodeo.multitimer";
-const TIMER_METADATA_KEY = `${ID}/metadata`;
+import { EXTENSION_ID, TIMER_METADATA_KEY } from "./extensionKeys";
 
 function shouldAddTimer(
   context: Parameters<
@@ -27,9 +25,16 @@ function addTimerMetadata(
   itemIds: Parameters<typeof OBR.scene.items.updateItems>[0],
   duration: number,
 ) {
+  const startedAtMs = Date.now();
+  const endsAtMs = startedAtMs + duration * 60 * 1000;
+
   OBR.scene.items.updateItems(itemIds, (items) => {
     items.forEach((item) => {
-      item.metadata[TIMER_METADATA_KEY] = { duration };
+      item.metadata[TIMER_METADATA_KEY] = {
+        duration,
+        startedAtMs,
+        endsAtMs,
+      };
     });
   });
 }
@@ -46,7 +51,7 @@ function removeTimerMetadata(
 
 export function setupContextMenu() {
   OBR.contextMenu.create({
-    id: `${ID}/context-menu`,
+    id: `${EXTENSION_ID}/context-menu`,
     icons: [
       {
         icon: "/icons.svg",
@@ -59,14 +64,32 @@ export function setupContextMenu() {
         },
       },
       {
+        icon: "/icons.svg",
+        label: "Add Timer",
+        filter: {
+          every: [
+            { key: "layer", value: "PROP" },
+            { key: ["metadata", TIMER_METADATA_KEY], value: undefined },
+          ],
+        },
+      },
+      {
         icon: "/remove-timer.svg",
         label: "Remove Timer",
         filter: {
           every: [{ key: "layer", value: "CHARACTER" }],
         },
       },
+      {
+        icon: "/remove-timer.svg",
+        label: "Remove Timer",
+        filter: {
+          every: [{ key: "layer", value: "PROP" }],
+        },
+      },
     ],
     onClick(context) {
+      console.log("Context menu clicked:", context.items);
       if (shouldAddTimer(context)) {
         const duration = promptDurationMinutes();
         if (duration === undefined) return;

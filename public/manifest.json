@@ -8,7 +8,7 @@
 		"title": "Multi Timer",
 		"icon": "/icons.svg",
 		"popover": "/",
-		"width": 420,
+		"width": 320,
 		"height": 640
 	}
 }
