@@ -88,6 +88,65 @@ function App() {
     }
   };
 
+  const restartTimer = async (timer: TimerRow) => {
+    try {
+      const now = nowMs > 0 ? nowMs : timer.startedAtMs;
+      setNowMs(now);
+
+      await OBR.scene.items.updateItems([timer.id], (items) => {
+        items.forEach((item) => {
+          const metadata = item.metadata[TIMER_METADATA_KEY] as
+            | TimerMetadata
+            | undefined;
+
+          if (metadata === undefined || typeof metadata !== "object") return;
+
+          const durationMinutes =
+            typeof metadata.duration === "number" &&
+            Number.isFinite(metadata.duration) &&
+            metadata.duration > 0
+              ? metadata.duration
+              : timer.duration;
+
+          const durationMs = durationMinutes * 60 * 1000;
+
+          item.metadata[TIMER_METADATA_KEY] = {
+            ...metadata,
+            duration: durationMinutes,
+            startedAtMs: now,
+            endsAtMs: now + durationMs,
+          };
+          delete (item.metadata[TIMER_METADATA_KEY] as { pausedAtMs?: number })
+            .pausedAtMs;
+        });
+      });
+    } catch (error) {
+      if (isMissingSceneError(error)) {
+        setHasScene(false);
+        return;
+      }
+
+      console.error("Failed to restart timer", error);
+    }
+  };
+
+  const removeTimer = async (timerId: string) => {
+    try {
+      await OBR.scene.items.updateItems([timerId], (items) => {
+        items.forEach((item) => {
+          delete item.metadata[TIMER_METADATA_KEY];
+        });
+      });
+    } catch (error) {
+      if (isMissingSceneError(error)) {
+        setHasScene(false);
+        return;
+      }
+
+      console.error("Failed to remove timer", error);
+    }
+  };
+
   const sortedTimers = useMemo(() => {
     if (nowMs <= 0) return timers;
     return sortTimersByRemaining(timers, nowMs);
@@ -204,7 +263,20 @@ function App() {
 
               return (
                 <li key={timer.id} className="timer-list-item">
-                  <div className="timer-name">{timer.name}</div>
+                  <div className="timer-header">
+                    <div className="timer-name">{timer.name}</div>
+                    <button
+                      type="button"
+                      className="timer-remove-button"
+                      onClick={() => {
+                        void removeTimer(timer.id);
+                      }}
+                      title="Remove timer"
+                      aria-label={`Remove timer ${timer.name}`}
+                    >
+                      X
+                    </button>
+                  </div>
                   <progress
                     value={remainingMs}
                     max={totalMs}
@@ -217,8 +289,21 @@ function App() {
                     }
                   />
                   <div className="timer-remaining">
-                    {formatRemaining(remainingSeconds)} / {timer.duration} min
-                    {timer.pausedAtMs ? " (paused)" : ""}
+                    <span>
+                      {formatRemaining(remainingSeconds)} / {timer.duration} min
+                      {timer.pausedAtMs ? " (paused)" : ""}
+                    </span>
+                    <button
+                      type="button"
+                      className="timer-restart-button"
+                      onClick={() => {
+                        void restartTimer(timer);
+                      }}
+                      title="Restart timer"
+                      aria-label={`Restart timer ${timer.name}`}
+                    >
+                      <img src="/restart.svg" alt="" aria-hidden="true" />
+                    </button>
                   </div>
                 </li>
               );
