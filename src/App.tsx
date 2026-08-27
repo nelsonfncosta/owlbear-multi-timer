@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./App.css";
 import OBR from "@owlbear-rodeo/sdk";
 import { TIMER_METADATA_KEY } from "./extensionKeys";
@@ -70,10 +70,25 @@ function formatRemaining(totalSeconds: number) {
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
+function getRemainingMs(timer: TimerRow, nowMs: number) {
+  return Math.max(0, timer.endsAtMs - nowMs);
+}
+
+function sortTimersByRemaining(timers: TimerRow[], nowMs: number): TimerRow[] {
+  return [...timers].sort(
+    (a, b) => getRemainingMs(a, nowMs) - getRemainingMs(b, nowMs),
+  );
+}
+
 function App() {
   const [isReady, setIsReady] = useState(false);
   const [timers, setTimers] = useState<TimerRow[]>([]);
   const [nowMs, setNowMs] = useState(0);
+
+  const sortedTimers = useMemo(() => {
+    if (nowMs <= 0) return timers;
+    return sortTimersByRemaining(timers, nowMs);
+  }, [timers, nowMs]);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -119,12 +134,12 @@ function App() {
         <h1>Configured Timers</h1>
         {!isReady && <p>Connecting to Owlbear...</p>}
         {isReady && timers.length === 0 && <p>No timers configured.</p>}
-        {isReady && timers.length > 0 && (
+        {isReady && sortedTimers.length > 0 && (
           <ul className="timer-list">
-            {timers.map((timer) => {
+            {sortedTimers.map((timer) => {
               const currentMs = nowMs > 0 ? nowMs : timer.startedAtMs;
               const totalMs = Math.max(1, timer.endsAtMs - timer.startedAtMs);
-              const remainingMs = Math.max(0, timer.endsAtMs - currentMs);
+              const remainingMs = getRemainingMs(timer, currentMs);
               const remainingSeconds = Math.ceil(remainingMs / 1000);
 
               return (
