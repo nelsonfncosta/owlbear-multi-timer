@@ -1,6 +1,30 @@
 import OBR from "@owlbear-rodeo/sdk";
 import { EXTENSION_ID, TIMER_METADATA_KEY } from "./extensionKeys";
 
+function isMissingSceneError(error: unknown) {
+  if (typeof error !== "object" || error === null) return false;
+
+  const maybeError = error as {
+    name?: string;
+    message?: string;
+    error?: { name?: string; message?: string };
+  };
+
+  const name = maybeError.error?.name ?? maybeError.name;
+  const message = maybeError.error?.message ?? maybeError.message;
+
+  return name === "MissingDataError" || message === "No scene found";
+}
+
+function notifySceneRequired(error: unknown) {
+  if (isMissingSceneError(error)) {
+    OBR.notification.show("Open a scene to manage timers.", "WARNING");
+    return;
+  }
+
+  console.error("Timer update failed", error);
+}
+
 function shouldAddTimer(
   context: Parameters<
     NonNullable<Parameters<typeof OBR.contextMenu.create>[0]["onClick"]>
@@ -28,7 +52,7 @@ function addTimerMetadata(
   const startedAtMs = Date.now();
   const endsAtMs = startedAtMs + duration * 60 * 1000;
 
-  OBR.scene.items.updateItems(itemIds, (items) => {
+  return OBR.scene.items.updateItems(itemIds, (items) => {
     items.forEach((item) => {
       item.metadata[TIMER_METADATA_KEY] = {
         duration,
@@ -42,7 +66,7 @@ function addTimerMetadata(
 function removeTimerMetadata(
   itemIds: Parameters<typeof OBR.scene.items.updateItems>[0],
 ) {
-  OBR.scene.items.updateItems(itemIds, (items) => {
+  return OBR.scene.items.updateItems(itemIds, (items) => {
     items.forEach((item) => {
       delete item.metadata[TIMER_METADATA_KEY];
     });
@@ -94,11 +118,13 @@ export function setupContextMenu() {
         const duration = promptDurationMinutes();
         if (duration === undefined) return;
 
-        addTimerMetadata(context.items, duration);
+        void addTimerMetadata(context.items, duration).catch(
+          notifySceneRequired,
+        );
         return;
       }
 
-      removeTimerMetadata(context.items);
+      void removeTimerMetadata(context.items).catch(notifySceneRequired);
     },
   });
 }

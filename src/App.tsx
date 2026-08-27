@@ -1,89 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
 import "./App.css";
 import OBR from "@owlbear-rodeo/sdk";
-import { TIMER_METADATA_KEY } from "./extensionKeys";
-
-type TimerRow = {
-  id: string;
-  name: string;
-  duration: number;
-  startedAtMs: number;
-  endsAtMs: number;
-};
-
-type TimerMetadata = {
-  duration?: unknown;
-  startedAtMs?: unknown;
-  endsAtMs?: unknown;
-};
-
-function getPositiveNumber(value: unknown): number | undefined {
-  return typeof value === "number" && Number.isFinite(value) && value > 0
-    ? value
-    : undefined;
-}
-
-function getTimerFromMetadata(
-  value: unknown,
-): { duration: number; startedAtMs: number; endsAtMs: number } | undefined {
-  if (typeof value !== "object" || value === null) return undefined;
-
-  const metadata = value as TimerMetadata;
-  const duration = getPositiveNumber(metadata.duration);
-  const startedAtMs = getPositiveNumber(metadata.startedAtMs);
-  const endsAtMs = getPositiveNumber(metadata.endsAtMs);
-
-  if (
-    duration === undefined ||
-    startedAtMs === undefined ||
-    endsAtMs === undefined ||
-    endsAtMs <= startedAtMs
-  ) {
-    return undefined;
-  }
-
-  return { duration, startedAtMs, endsAtMs };
-}
-
-function mapItemsToTimerRows(
-  items: Awaited<ReturnType<typeof OBR.scene.items.getItems>>,
-): TimerRow[] {
-  return items
-    .map((item) => {
-      const timer = getTimerFromMetadata(item.metadata[TIMER_METADATA_KEY]);
-      if (timer === undefined) return undefined;
-
-      return {
-        id: item.id,
-        name: item.name || "Unnamed",
-        duration: timer.duration,
-        startedAtMs: timer.startedAtMs,
-        endsAtMs: timer.endsAtMs,
-      };
-    })
-    .filter((item): item is TimerRow => item !== undefined);
-}
-
-function formatRemaining(totalSeconds: number) {
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${minutes}:${String(seconds).padStart(2, "0")}`;
-}
-
-function getRemainingMs(timer: TimerRow, nowMs: number) {
-  return Math.max(0, timer.endsAtMs - nowMs);
-}
-
-function sortTimersByRemaining(timers: TimerRow[], nowMs: number): TimerRow[] {
-  return [...timers].sort(
-    (a, b) => getRemainingMs(a, nowMs) - getRemainingMs(b, nowMs),
-  );
-}
+import { openFloatingTimerPopover } from "./floatingPopover";
+import {
+  formatRemaining,
+  getRemainingMs,
+  isMissingSceneError,
+  mapItemsToTimerRows,
+  sortTimersByRemaining,
+  type TimerRow,
+} from "./timerUtils";
 
 function App() {
   const [isReady, setIsReady] = useState(false);
   const [timers, setTimers] = useState<TimerRow[]>([]);
   const [nowMs, setNowMs] = useState(0);
+  const [hasScene, setHasScene] = useState(true);
 
   const sortedTimers = useMemo(() => {
     if (nowMs <= 0) return timers;
@@ -105,10 +37,23 @@ function App() {
     let unsubscribe = () => {};
 
     const refreshTimers = async () => {
-      const items = await OBR.scene.items.getItems();
-      if (!isMounted) return;
+      try {
+        const items = await OBR.scene.items.getItems();
+        if (!isMounted) return;
 
-      setTimers(mapItemsToTimerRows(items));
+        setHasScene(true);
+        setTimers(mapItemsToTimerRows(items));
+      } catch (error) {
+        if (!isMounted) return;
+
+        if (isMissingSceneError(error)) {
+          setHasScene(false);
+          setTimers([]);
+          return;
+        }
+
+        console.error("Failed to refresh timers", error);
+      }
     };
 
     OBR.onReady(async () => {
@@ -133,6 +78,7 @@ function App() {
       <section>
         <h1>Configured Timers</h1>
         {!isReady && <p>Connecting to Owlbear...</p>}
+        {isReady && !hasScene && <p>Open a scene to view timers.</p>}
         {isReady && timers.length === 0 && <p>No timers configured.</p>}
         {isReady && sortedTimers.length > 0 && (
           <ul className="timer-list">
@@ -149,6 +95,14 @@ function App() {
                   <div>
                     {formatRemaining(remainingSeconds)} / {timer.duration} min
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void openFloatingTimerPopover(timer.id);
+                    }}
+                  >
+                    Popup
+                  </button>
                 </li>
               );
             })}
