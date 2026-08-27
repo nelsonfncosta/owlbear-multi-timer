@@ -7,12 +7,14 @@ export type TimerRow = {
   duration: number;
   startedAtMs: number;
   endsAtMs: number;
+  pausedAtMs?: number;
 };
 
 type TimerMetadata = {
   duration?: unknown;
   startedAtMs?: unknown;
   endsAtMs?: unknown;
+  pausedAtMs?: unknown;
 };
 
 export function isMissingSceneError(error: unknown) {
@@ -38,13 +40,19 @@ function getPositiveNumber(value: unknown): number | undefined {
 
 function getTimerFromMetadata(
   value: unknown,
-): { duration: number; startedAtMs: number; endsAtMs: number } | undefined {
+): {
+  duration: number;
+  startedAtMs: number;
+  endsAtMs: number;
+  pausedAtMs?: number;
+} | undefined {
   if (typeof value !== "object" || value === null) return undefined;
 
   const metadata = value as TimerMetadata;
   const duration = getPositiveNumber(metadata.duration);
   const startedAtMs = getPositiveNumber(metadata.startedAtMs);
   const endsAtMs = getPositiveNumber(metadata.endsAtMs);
+  const pausedAtMs = getPositiveNumber(metadata.pausedAtMs);
 
   if (
     duration === undefined ||
@@ -55,7 +63,11 @@ function getTimerFromMetadata(
     return undefined;
   }
 
-  return { duration, startedAtMs, endsAtMs };
+  if (pausedAtMs !== undefined && pausedAtMs < startedAtMs) {
+    return undefined;
+  }
+
+  return { duration, startedAtMs, endsAtMs, pausedAtMs };
 }
 
 export function mapItemsToTimerRows(
@@ -72,6 +84,9 @@ export function mapItemsToTimerRows(
         duration: timer.duration,
         startedAtMs: timer.startedAtMs,
         endsAtMs: timer.endsAtMs,
+        ...(timer.pausedAtMs !== undefined
+          ? { pausedAtMs: timer.pausedAtMs }
+          : {}),
       };
     })
     .filter((item): item is TimerRow => item !== undefined);
@@ -84,14 +99,30 @@ export function formatRemaining(totalSeconds: number) {
 }
 
 export function getRemainingMs(timer: TimerRow, nowMs: number) {
-  return Math.max(0, timer.endsAtMs - nowMs);
+  const effectiveNowMs = timer.pausedAtMs ?? nowMs;
+  return Math.max(0, timer.endsAtMs - effectiveNowMs);
 }
 
 export function sortTimersByRemaining(
   timers: TimerRow[],
   nowMs: number,
 ): TimerRow[] {
-  return [...timers].sort(
-    (a, b) => getRemainingMs(a, nowMs) - getRemainingMs(b, nowMs),
-  );
+  return [...timers].sort((a, b) => {
+    const aRemaining = getRemainingMs(a, nowMs);
+    const bRemaining = getRemainingMs(b, nowMs);
+    const aComplete = aRemaining <= 0;
+    const bComplete = bRemaining <= 0;
+
+    // Keep ongoing timers above completed timers.
+    if (aComplete !== bComplete) {
+      return aComplete ? 1 : -1;
+    }
+
+    // Within the same group, sort by remaining time.
+    if (aRemaining !== bRemaining) {
+      return aRemaining - bRemaining;
+    }
+
+    return a.endsAtMs - b.endsAtMs;
+  });
 }

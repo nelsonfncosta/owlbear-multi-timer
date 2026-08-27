@@ -1,20 +1,6 @@
 import OBR from "@owlbear-rodeo/sdk";
 import { EXTENSION_ID, TIMER_METADATA_KEY } from "./extensionKeys";
-
-function isMissingSceneError(error: unknown) {
-  if (typeof error !== "object" || error === null) return false;
-
-  const maybeError = error as {
-    name?: string;
-    message?: string;
-    error?: { name?: string; message?: string };
-  };
-
-  const name = maybeError.error?.name ?? maybeError.name;
-  const message = maybeError.error?.message ?? maybeError.message;
-
-  return name === "MissingDataError" || message === "No scene found";
-}
+import { isMissingSceneError } from "./timerUtils";
 
 function notifySceneRequired(error: unknown) {
   if (isMissingSceneError(error)) {

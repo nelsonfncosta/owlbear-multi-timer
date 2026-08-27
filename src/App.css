@@ -188,3 +188,42 @@
   margin: 0;
   padding: 0;
 }
+
+.timer-panel {
+  text-align: left;
+  padding: 12px;
+}
+
+.timer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.timer-list-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.timer-list-item progress {
+  width: 100%;
+  cursor: pointer;
+}
+
+.timer-list-item progress.is-paused {
+  opacity: 0.7;
+}
+
+.timer-name {
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.timer-remaining {
+  font-size: 14px;
+}
