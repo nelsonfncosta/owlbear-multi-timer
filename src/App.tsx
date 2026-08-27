@@ -19,6 +19,7 @@ type TimerMetadata = {
 };
 
 function App() {
+  const restartIconUrl = `${import.meta.env.BASE_URL}restart.svg`;
   const [isReady, setIsReady] = useState(false);
   const [timers, setTimers] = useState<TimerRow[]>([]);
   const [nowMs, setNowMs] = useState(0);
@@ -302,7 +303,7 @@ function App() {
                       title="Restart timer"
                       aria-label={`Restart timer ${timer.name}`}
                     >
-                      <img src="/restart.svg" alt="" aria-hidden="true" />
+                      <img src={restartIconUrl} alt="" aria-hidden="true" />
                     </button>
                   </div>
                 </li>

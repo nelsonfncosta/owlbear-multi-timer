@@ -2,6 +2,9 @@ import OBR from "@owlbear-rodeo/sdk";
 import { EXTENSION_ID, TIMER_METADATA_KEY } from "./extensionKeys";
 import { isMissingSceneError } from "./timerUtils";
 
+const addTimerIconUrl = `${import.meta.env.BASE_URL}icons.svg`;
+const removeTimerIconUrl = `${import.meta.env.BASE_URL}remove-timer.svg`;
+
 function notifySceneRequired(error: unknown) {
   if (isMissingSceneError(error)) {
     OBR.notification.show("Open a scene to manage timers.", "WARNING");
@@ -64,7 +67,7 @@ export function setupContextMenu() {
     id: `${EXTENSION_ID}/context-menu`,
     icons: [
       {
-        icon: "/icons.svg",
+        icon: addTimerIconUrl,
         label: "Add Timer",
         filter: {
           every: [
@@ -74,7 +77,7 @@ export function setupContextMenu() {
         },
       },
       {
-        icon: "/icons.svg",
+        icon: addTimerIconUrl,
         label: "Add Timer",
         filter: {
           every: [
@@ -84,14 +87,14 @@ export function setupContextMenu() {
         },
       },
       {
-        icon: "/remove-timer.svg",
+        icon: removeTimerIconUrl,
         label: "Remove Timer",
         filter: {
           every: [{ key: "layer", value: "CHARACTER" }],
         },
       },
       {
-        icon: "/remove-timer.svg",
+        icon: removeTimerIconUrl,
         label: "Remove Timer",
         filter: {
           every: [{ key: "layer", value: "PROP" }],
