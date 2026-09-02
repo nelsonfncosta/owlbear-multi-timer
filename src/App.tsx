@@ -20,12 +20,55 @@ type TimerMetadata = {
 
 function App() {
   const restartIconUrl = `${import.meta.env.BASE_URL}restart.svg`;
+  const sectionRef = useRef<HTMLElement | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [timers, setTimers] = useState<TimerRow[]>([]);
   const [nowMs, setNowMs] = useState(0);
   const [hasScene, setHasScene] = useState(true);
   const notifiedCompleteTimersRef = useRef(new Set<string>());
   const observedActiveTimersRef = useRef(new Set<string>());
+
+  // Allow action popover to resize dynamically based on the section content.
+  useEffect(() => {
+    if (!isReady) return;
+
+    const section = sectionRef.current;
+    if (!section) return;
+
+    let frameId = 0;
+    let lastHeight = 0;
+
+    const updatePopoverHeight = () => {
+      const height = Math.max(100, Math.ceil(section.scrollHeight));
+      if (height === lastHeight) return;
+
+      lastHeight = height;
+      void OBR.action.setHeight(height).catch((error) => {
+        console.error("Failed to resize timer popover", error);
+      });
+    };
+
+    const observer = new ResizeObserver(() => {
+      if (frameId !== 0) {
+        window.cancelAnimationFrame(frameId);
+      }
+
+      frameId = window.requestAnimationFrame(() => {
+        frameId = 0;
+        updatePopoverHeight();
+      });
+    });
+
+    observer.observe(section);
+    updatePopoverHeight();
+
+    return () => {
+      observer.disconnect();
+      if (frameId !== 0) {
+        window.cancelAnimationFrame(frameId);
+      }
+    };
+  }, [isReady]);
 
   const toggleTimerPaused = async (timer: TimerRow) => {
     try {
@@ -250,7 +293,7 @@ function App() {
 
   return (
     <>
-      <section className="timer-panel">
+      <section ref={sectionRef} className="timer-panel">
         {!isReady && <p>Connecting to Owlbear...</p>}
         {isReady && !hasScene && <p>Open a scene to view timers.</p>}
         {isReady && timers.length === 0 && <p>No timers configured.</p>}
