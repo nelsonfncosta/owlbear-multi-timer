@@ -11,6 +11,9 @@ import {
 } from "./timerUtils";
 import { TIMER_METADATA_KEY } from "./extensionKeys";
 
+const restartIconUrl = `${import.meta.env.BASE_URL}restart.svg`;
+const removeTimerIconUrl = `${import.meta.env.BASE_URL}remove-timer.svg`;
+
 type TimerMetadata = {
   duration?: unknown;
   startedAtMs?: unknown;
@@ -19,8 +22,6 @@ type TimerMetadata = {
 };
 
 function App() {
-  const restartIconUrl = `${import.meta.env.BASE_URL}restart.svg`;
-  const removeTimerIconUrl = `${import.meta.env.BASE_URL}remove-timer.svg`;
   const sectionRef = useRef<HTMLElement | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [timers, setTimers] = useState<TimerRow[]>([]);
