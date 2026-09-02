@@ -212,6 +212,9 @@
 
 .timer-list-item progress {
   width: 100%;
+}
+
+.timer-list-item progress.is-interactive {
   cursor: pointer;
 }
 

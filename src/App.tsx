@@ -27,6 +27,8 @@ function App() {
   const [timers, setTimers] = useState<TimerRow[]>([]);
   const [nowMs, setNowMs] = useState(0);
   const [hasScene, setHasScene] = useState(true);
+  const [playerId, setPlayerId] = useState<string>();
+  const [isGm, setIsGm] = useState(false);
   const notifiedCompleteTimersRef = useRef(new Set<string>());
   const observedActiveTimersRef = useRef(new Set<string>());
 
@@ -240,6 +242,14 @@ function App() {
     OBR.onReady(async () => {
       if (!isMounted) return;
 
+      const [currentPlayerId, role] = await Promise.all([
+        OBR.player.getId(),
+        OBR.player.getRole(),
+      ]);
+      if (!isMounted) return;
+
+      setPlayerId(currentPlayerId);
+      setIsGm(role === "GM");
       setIsReady(true);
       await refreshTimers();
 
@@ -306,32 +316,51 @@ function App() {
               const totalMs = Math.max(1, timer.endsAtMs - timer.startedAtMs);
               const remainingMs = getRemainingMs(timer, currentMs);
               const remainingSeconds = Math.ceil(remainingMs / 1000);
+              const canManageTimer = isGm || timer.createdBy === playerId;
 
               return (
                 <li key={timer.id} className="timer-list-item">
                   <div className="timer-header">
                     <div className="timer-name">{timer.name}</div>
-                    <button
-                      type="button"
-                      className="timer-remove-button"
-                      onClick={() => {
-                        void removeTimer(timer.id);
-                      }}
-                      title="Remove timer"
-                      aria-label={`Remove timer ${timer.name}`}
-                    >
-                      <img src={removeTimerIconUrl} alt="" aria-hidden="true" />
-                    </button>
+                    {canManageTimer && (
+                      <button
+                        type="button"
+                        className="timer-remove-button"
+                        onClick={() => {
+                          void removeTimer(timer.id);
+                        }}
+                        title="Remove timer"
+                        aria-label={`Remove timer ${timer.name}`}
+                      >
+                        <img src={removeTimerIconUrl} alt="" aria-hidden="true" />
+                      </button>
+                    )}
                   </div>
                   <progress
                     value={remainingMs}
                     max={totalMs}
-                    onClick={() => {
-                      void toggleTimerPaused(timer);
-                    }}
-                    className={timer.pausedAtMs ? "is-paused" : undefined}
+                    onClick={
+                      canManageTimer
+                        ? () => {
+                            void toggleTimerPaused(timer);
+                          }
+                        : undefined
+                    }
+                    className={
+                      canManageTimer
+                        ? timer.pausedAtMs
+                          ? "is-paused is-interactive"
+                          : "is-interactive"
+                        : timer.pausedAtMs
+                          ? "is-paused"
+                          : undefined
+                    }
                     title={
-                      timer.pausedAtMs ? "Click to resume" : "Click to pause"
+                      canManageTimer
+                        ? timer.pausedAtMs
+                          ? "Click to resume"
+                          : "Click to pause"
+                        : undefined
                     }
                   />
                   <div className="timer-remaining">
@@ -339,17 +368,19 @@ function App() {
                       {formatRemaining(remainingSeconds)} / {timer.duration} min
                       {timer.pausedAtMs ? " (paused)" : ""}
                     </span>
-                    <button
-                      type="button"
-                      className="timer-restart-button"
-                      onClick={() => {
-                        void restartTimer(timer);
-                      }}
-                      title="Restart timer"
-                      aria-label={`Restart timer ${timer.name}`}
-                    >
-                      <img src={restartIconUrl} alt="" aria-hidden="true" />
-                    </button>
+                    {canManageTimer && (
+                      <button
+                        type="button"
+                        className="timer-restart-button"
+                        onClick={() => {
+                          void restartTimer(timer);
+                        }}
+                        title="Restart timer"
+                        aria-label={`Restart timer ${timer.name}`}
+                      >
+                        <img src={restartIconUrl} alt="" aria-hidden="true" />
+                      </button>
+                    )}
                   </div>
                 </li>
               );

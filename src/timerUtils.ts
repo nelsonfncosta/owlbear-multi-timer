@@ -8,6 +8,7 @@ export type TimerRow = {
   startedAtMs: number;
   endsAtMs: number;
   pausedAtMs?: number;
+  createdBy?: string;
 };
 
 type TimerMetadata = {
@@ -15,6 +16,7 @@ type TimerMetadata = {
   startedAtMs?: unknown;
   endsAtMs?: unknown;
   pausedAtMs?: unknown;
+  createdBy?: unknown;
 };
 
 export function isMissingSceneError(error: unknown) {
@@ -45,6 +47,7 @@ function getTimerFromMetadata(
   startedAtMs: number;
   endsAtMs: number;
   pausedAtMs?: number;
+  createdBy?: string;
 } | undefined {
   if (typeof value !== "object" || value === null) return undefined;
 
@@ -53,6 +56,10 @@ function getTimerFromMetadata(
   const startedAtMs = getPositiveNumber(metadata.startedAtMs);
   const endsAtMs = getPositiveNumber(metadata.endsAtMs);
   const pausedAtMs = getPositiveNumber(metadata.pausedAtMs);
+  const createdBy =
+    typeof metadata.createdBy === "string" && metadata.createdBy.length > 0
+      ? metadata.createdBy
+      : undefined;
 
   if (
     duration === undefined ||
@@ -67,14 +74,14 @@ function getTimerFromMetadata(
     return undefined;
   }
 
-  return { duration, startedAtMs, endsAtMs, pausedAtMs };
+  return { duration, startedAtMs, endsAtMs, pausedAtMs, createdBy };
 }
 
 export function mapItemsToTimerRows(
   items: Awaited<ReturnType<typeof OBR.scene.items.getItems>>,
 ): TimerRow[] {
   return items
-    .map((item) => {
+    .map((item): TimerRow | undefined => {
       const timer = getTimerFromMetadata(item.metadata[TIMER_METADATA_KEY]);
       if (timer === undefined) return undefined;
 
@@ -84,9 +91,8 @@ export function mapItemsToTimerRows(
         duration: timer.duration,
         startedAtMs: timer.startedAtMs,
         endsAtMs: timer.endsAtMs,
-        ...(timer.pausedAtMs !== undefined
-          ? { pausedAtMs: timer.pausedAtMs }
-          : {}),
+        pausedAtMs: timer.pausedAtMs,
+        createdBy: timer.createdBy,
       };
     })
     .filter((item): item is TimerRow => item !== undefined);

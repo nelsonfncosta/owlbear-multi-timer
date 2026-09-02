@@ -4,6 +4,9 @@ import { isMissingSceneError } from "./timerUtils";
 
 const addTimerIconUrl = `${import.meta.env.BASE_URL}icons.svg`;
 const removeTimerIconUrl = `${import.meta.env.BASE_URL}remove-timer.svg`;
+type ContextMenuContext = Parameters<
+  NonNullable<Parameters<typeof OBR.contextMenu.create>[0]["onClick"]>
+>[0];
 
 function notifySceneRequired(error: unknown) {
   if (isMissingSceneError(error)) {
@@ -14,14 +17,24 @@ function notifySceneRequired(error: unknown) {
   console.error("Timer update failed", error);
 }
 
-function shouldAddTimer(
-  context: Parameters<
-    NonNullable<Parameters<typeof OBR.contextMenu.create>[0]["onClick"]>
-  >[0],
-) {
+function shouldAddTimer(context: ContextMenuContext) {
   return context.items.every(
     (item) => item.metadata[TIMER_METADATA_KEY] === undefined,
   );
+}
+
+async function canManageTimers(context: ContextMenuContext) {
+  if ((await OBR.player.getRole()) === "GM") return true;
+
+  const playerId = await OBR.player.getId();
+  return context.items.every((item) => {
+    const metadata = item.metadata[TIMER_METADATA_KEY];
+    return (
+      typeof metadata === "object" &&
+      metadata !== null &&
+      (metadata as { createdBy?: unknown }).createdBy === playerId
+    );
+  });
 }
 
 function promptDurationMinutes() {
@@ -34,12 +47,13 @@ function promptDurationMinutes() {
   return duration;
 }
 
-function addTimerMetadata(
+async function addTimerMetadata(
   itemIds: Parameters<typeof OBR.scene.items.updateItems>[0],
   duration: number,
 ) {
   const startedAtMs = Date.now();
   const endsAtMs = startedAtMs + duration * 60 * 1000;
+  const createdBy = await OBR.player.getId();
 
   return OBR.scene.items.updateItems(itemIds, (items) => {
     items.forEach((item) => {
@@ -47,6 +61,7 @@ function addTimerMetadata(
         duration,
         startedAtMs,
         endsAtMs,
+        createdBy,
       };
     });
   });
@@ -113,7 +128,19 @@ export function setupContextMenu() {
         return;
       }
 
-      void removeTimerMetadata(context.items).catch(notifySceneRequired);
+      void canManageTimers(context)
+        .then((canManage) => {
+          if (!canManage) {
+            OBR.notification.show(
+              "Only the timer creator or GM can manage timers.",
+              "WARNING",
+            );
+            return;
+          }
+
+          return removeTimerMetadata(context.items);
+        })
+        .catch(notifySceneRequired);
     },
   });
 }
