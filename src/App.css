@@ -194,6 +194,16 @@
   padding: 12px;
 }
 
+.timer-config-panel {
+  min-height: 100%;
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+  box-sizing: border-box;
+  background: var(--bg);
+  color: #fff;
+}
+
 .timer-list {
   display: flex;
   flex-direction: column;
@@ -216,6 +226,32 @@
 
 .timer-list-item progress.is-interactive {
   cursor: pointer;
+}
+
+.timer-config-remove-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 4px;
+  padding: 12px 0 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #ef4444;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.timer-config-remove-button img {
+  width: 18px;
+  height: 18px;
+  display: block;
+  filter: brightness(0) saturate(100%) invert(34%) sepia(91%) saturate(1868%)
+    hue-rotate(337deg) brightness(99%) contrast(89%);
 }
 
 .timer-list-item progress.is-paused {

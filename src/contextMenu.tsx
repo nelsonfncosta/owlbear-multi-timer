@@ -1,146 +1,31 @@
 import OBR from "@owlbear-rodeo/sdk";
-import { EXTENSION_ID, TIMER_METADATA_KEY } from "./extensionKeys";
-import { isMissingSceneError } from "./timerUtils";
+import { EXTENSION_ID, TIMER_CONFIG_POPOVER_URL } from "./extensionKeys";
 
 const addTimerIconUrl = `${import.meta.env.BASE_URL}icons.svg`;
-const removeTimerIconUrl = `${import.meta.env.BASE_URL}remove-timer.svg`;
-type ContextMenuContext = Parameters<
-  NonNullable<Parameters<typeof OBR.contextMenu.create>[0]["onClick"]>
->[0];
-
-function notifySceneRequired(error: unknown) {
-  if (isMissingSceneError(error)) {
-    OBR.notification.show("Open a scene to manage timers.", "WARNING");
-    return;
-  }
-
-  console.error("Timer update failed", error);
-}
-
-function shouldAddTimer(context: ContextMenuContext) {
-  return context.items.every(
-    (item) => item.metadata[TIMER_METADATA_KEY] === undefined,
-  );
-}
-
-async function canManageTimers(context: ContextMenuContext) {
-  if ((await OBR.player.getRole()) === "GM") return true;
-
-  const playerId = await OBR.player.getId();
-  return context.items.every((item) => {
-    const metadata = item.metadata[TIMER_METADATA_KEY];
-    return (
-      typeof metadata === "object" &&
-      metadata !== null &&
-      (metadata as { createdBy?: unknown }).createdBy === playerId
-    );
-  });
-}
-
-function promptDurationMinutes() {
-  const input = window.prompt("Enter duration in minutes:");
-  if (input === null) return undefined;
-
-  const duration = Number(input);
-  if (!Number.isFinite(duration) || duration <= 0) return undefined;
-
-  return duration;
-}
-
-async function addTimerMetadata(
-  itemIds: Parameters<typeof OBR.scene.items.updateItems>[0],
-  duration: number,
-) {
-  const startedAtMs = Date.now();
-  const endsAtMs = startedAtMs + duration * 60 * 1000;
-  const createdBy = await OBR.player.getId();
-
-  return OBR.scene.items.updateItems(itemIds, (items) => {
-    items.forEach((item) => {
-      item.metadata[TIMER_METADATA_KEY] = {
-        duration,
-        startedAtMs,
-        endsAtMs,
-        createdBy,
-      };
-    });
-  });
-}
-
-function removeTimerMetadata(
-  itemIds: Parameters<typeof OBR.scene.items.updateItems>[0],
-) {
-  return OBR.scene.items.updateItems(itemIds, (items) => {
-    items.forEach((item) => {
-      delete item.metadata[TIMER_METADATA_KEY];
-    });
-  });
-}
 
 export function setupContextMenu() {
   OBR.contextMenu.create({
-    id: `${EXTENSION_ID}/context-menu`,
+    id: `${EXTENSION_ID}/add-timer-context-menu`,
     icons: [
       {
         icon: addTimerIconUrl,
-        label: "Add Timer",
-        filter: {
-          every: [
-            { key: "layer", value: "CHARACTER" },
-            { key: ["metadata", TIMER_METADATA_KEY], value: undefined },
-          ],
-        },
-      },
-      {
-        icon: addTimerIconUrl,
-        label: "Add Timer",
-        filter: {
-          every: [
-            { key: "layer", value: "PROP" },
-            { key: ["metadata", TIMER_METADATA_KEY], value: undefined },
-          ],
-        },
-      },
-      {
-        icon: removeTimerIconUrl,
-        label: "Remove Timer",
+        label: "Multi Timer",
         filter: {
           every: [{ key: "layer", value: "CHARACTER" }],
         },
       },
       {
-        icon: removeTimerIconUrl,
-        label: "Remove Timer",
+        icon: addTimerIconUrl,
+        label: "Multi Timer",
         filter: {
           every: [{ key: "layer", value: "PROP" }],
         },
       },
     ],
-    onClick(context) {
-      console.log("Context menu clicked:", context.items);
-      if (shouldAddTimer(context)) {
-        const duration = promptDurationMinutes();
-        if (duration === undefined) return;
-
-        void addTimerMetadata(context.items, duration).catch(
-          notifySceneRequired,
-        );
-        return;
-      }
-
-      void canManageTimers(context)
-        .then((canManage) => {
-          if (!canManage) {
-            OBR.notification.show(
-              "Only the timer creator or GM can manage timers.",
-              "WARNING",
-            );
-            return;
-          }
-
-          return removeTimerMetadata(context.items);
-        })
-        .catch(notifySceneRequired);
+    embed: {
+      url: `${import.meta.env.BASE_URL}${TIMER_CONFIG_POPOVER_URL}`,
+      height: 200,
     },
+    onClick() {},
   });
 }

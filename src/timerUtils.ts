@@ -9,6 +9,7 @@ export type TimerRow = {
   endsAtMs: number;
   pausedAtMs?: number;
   createdBy?: string;
+  lightBehavior?: "NONE" | "DIM" | "OFF";
 };
 
 type TimerMetadata = {
@@ -17,6 +18,7 @@ type TimerMetadata = {
   endsAtMs?: unknown;
   pausedAtMs?: unknown;
   createdBy?: unknown;
+  lightBehavior?: unknown;
 };
 
 export function isMissingSceneError(error: unknown) {
@@ -48,6 +50,7 @@ function getTimerFromMetadata(
   endsAtMs: number;
   pausedAtMs?: number;
   createdBy?: string;
+  lightBehavior?: "NONE" | "DIM" | "OFF";
 } | undefined {
   if (typeof value !== "object" || value === null) return undefined;
 
@@ -59,6 +62,12 @@ function getTimerFromMetadata(
   const createdBy =
     typeof metadata.createdBy === "string" && metadata.createdBy.length > 0
       ? metadata.createdBy
+      : undefined;
+  const lightBehavior =
+    metadata.lightBehavior === "NONE" ||
+    metadata.lightBehavior === "DIM" ||
+    metadata.lightBehavior === "OFF"
+      ? metadata.lightBehavior
       : undefined;
 
   if (
@@ -74,7 +83,14 @@ function getTimerFromMetadata(
     return undefined;
   }
 
-  return { duration, startedAtMs, endsAtMs, pausedAtMs, createdBy };
+  return {
+    duration,
+    startedAtMs,
+    endsAtMs,
+    pausedAtMs,
+    createdBy,
+    lightBehavior,
+  };
 }
 
 export function mapItemsToTimerRows(
@@ -93,6 +109,7 @@ export function mapItemsToTimerRows(
         endsAtMs: timer.endsAtMs,
         pausedAtMs: timer.pausedAtMs,
         createdBy: timer.createdBy,
+        lightBehavior: timer.lightBehavior,
       };
     })
     .filter((item): item is TimerRow => item !== undefined);

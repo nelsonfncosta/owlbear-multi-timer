@@ -9,7 +9,10 @@ import {
   sortTimersByRemaining,
   type TimerRow,
 } from "./timerUtils";
-import { TIMER_METADATA_KEY } from "./extensionKeys";
+import {
+  DYNAMIC_FOG_LIGHT_METADATA_KEY,
+  TIMER_METADATA_KEY,
+} from "./extensionKeys";
 
 const restartIconUrl = `${import.meta.env.BASE_URL}restart.svg`;
 const removeTimerIconUrl = `${import.meta.env.BASE_URL}remove-timer.svg`;
@@ -299,9 +302,35 @@ function App() {
       if (observedActiveTimersRef.current.has(completionKey)) {
         notifiedCompleteTimersRef.current.add(completionKey);
         void OBR.notification.show(`Timer finished: ${timer.name}`, "INFO");
+
+        const canManageTimer = isGm || timer.createdBy === playerId;
+        const lightBehavior = timer.lightBehavior ?? "DIM";
+        if (canManageTimer && lightBehavior !== "NONE") {
+          void OBR.scene.items
+            .updateItems([timer.id], (items) => {
+              items.forEach((item) => {
+                if (lightBehavior === "OFF") {
+                  delete item.metadata[DYNAMIC_FOG_LIGHT_METADATA_KEY];
+                  return;
+                }
+
+                const light = item.metadata[DYNAMIC_FOG_LIGHT_METADATA_KEY];
+                if (typeof light !== "object" || light === null) return;
+
+                item.metadata[DYNAMIC_FOG_LIGHT_METADATA_KEY] = {
+                  ...(light as Record<string, unknown>),
+                  attenuationRadius: 100,
+                  sourceRadius: 4,
+                };
+              });
+            })
+            .catch((error) => {
+              console.error("Failed to dim timer light", error);
+            });
+        }
       }
     });
-  }, [hasScene, isReady, nowMs, sortedTimers]);
+  }, [hasScene, isGm, isReady, nowMs, playerId, sortedTimers]);
 
   return (
     <>
@@ -332,7 +361,11 @@ function App() {
                         title="Remove timer"
                         aria-label={`Remove timer ${timer.name}`}
                       >
-                        <img src={removeTimerIconUrl} alt="" aria-hidden="true" />
+                        <img
+                          src={removeTimerIconUrl}
+                          alt=""
+                          aria-hidden="true"
+                        />
                       </button>
                     )}
                   </div>
