@@ -11,6 +11,7 @@ export function setupContextMenu() {
         icon: addTimerIconUrl,
         label: "Multi Timer",
         filter: {
+          permissions: ["UPDATE"],
           every: [{ key: "layer", value: "CHARACTER" }],
         },
       },
@@ -18,6 +19,7 @@ export function setupContextMenu() {
         icon: addTimerIconUrl,
         label: "Multi Timer",
         filter: {
+          permissions: ["UPDATE"],
           every: [{ key: "layer", value: "PROP" }],
         },
       },

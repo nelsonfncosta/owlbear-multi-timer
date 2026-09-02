@@ -13,6 +13,7 @@ function TimerConfigApp() {
   const [isReady, setIsReady] = useState(false);
   const [hasExistingTimers, setHasExistingTimers] = useState(false);
   const [canRemoveTimers, setCanRemoveTimers] = useState(false);
+  const isReadOnly = isReady && hasExistingTimers && !canRemoveTimers;
 
   const getSelectedItems = async () => {
     const itemIds = (await OBR.player.getSelection()) ?? [];
@@ -138,30 +139,37 @@ function TimerConfigApp() {
   return (
     <main className="timer-config-panel">
       {!isReady && <p>Loading selection...</p>}
-      <label style={{ display: "grid", gap: 4 }}>
-        Duration (minutes)
-        <input
-          type="number"
-          min="0.01"
-          step="any"
-          value={duration}
-          onChange={(event) => setDuration(event.target.value)}
-          autoFocus
-        />
-      </label>
-      <label style={{ display: "grid", gap: 4 }}>
-        When the timer ends
-        <select
-          value={lightBehavior}
-          onChange={(event) =>
-            setLightBehavior(event.target.value as LightBehavior)
-          }
-        >
-          <option value="NONE">Keep light unchanged</option>
-          <option value="DIM">Leave a small glow</option>
-          <option value="OFF">Turn light off</option>
-        </select>
-      </label>
+      {!isReadOnly && (
+        <>
+          <label style={{ display: "grid", gap: 4 }}>
+            Duration (minutes)
+            <input
+              type="number"
+              min="0.01"
+              step="any"
+              value={duration}
+              onChange={(event) => setDuration(event.target.value)}
+              autoFocus
+            />
+          </label>
+          <label style={{ display: "grid", gap: 4 }}>
+            When the timer ends
+            <select
+              value={lightBehavior}
+              onChange={(event) =>
+                setLightBehavior(event.target.value as LightBehavior)
+              }
+            >
+              <option value="NONE">Keep light unchanged</option>
+              <option value="DIM">Leave a small glow</option>
+              <option value="OFF">Turn light off</option>
+            </select>
+          </label>
+        </>
+      )}
+      {isReadOnly && (
+        <p role="status">This timer is managed by another player.</p>
+      )}
       {error && <p role="alert">{error}</p>}
       {isReady && !hasExistingTimers && (
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
