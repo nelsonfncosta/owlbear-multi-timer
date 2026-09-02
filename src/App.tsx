@@ -20,6 +20,7 @@ type TimerMetadata = {
 
 function App() {
   const restartIconUrl = `${import.meta.env.BASE_URL}restart.svg`;
+  const removeTimerIconUrl = `${import.meta.env.BASE_URL}remove-timer.svg`;
   const sectionRef = useRef<HTMLElement | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [timers, setTimers] = useState<TimerRow[]>([]);
@@ -318,7 +319,7 @@ function App() {
                       title="Remove timer"
                       aria-label={`Remove timer ${timer.name}`}
                     >
-                      X
+                      <img src={removeTimerIconUrl} alt="" aria-hidden="true" />
                     </button>
                   </div>
                   <progress

@@ -249,8 +249,10 @@
   padding: 0;
 }
 
-.timer-remove-button:hover {
-  border-color: var(--accent);
+.timer-remove-button img {
+  width: 16px;
+  height: 16px;
+  display: block;
 }
 
 .timer-remaining {
