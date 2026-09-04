@@ -40,7 +40,7 @@
 
 .timer-panel-divider {
   height: 1px;
-  margin: 8px 0 8px;
+  margin: 8px;
   background: currentColor;
   opacity: 0.25;
 }
@@ -113,6 +113,21 @@
 
 .timer-name {
   font-weight: 600;
+}
+
+.timer-name-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.timer-name-button:hover {
+  text-decoration: underline;
 }
 
 .timer-header {

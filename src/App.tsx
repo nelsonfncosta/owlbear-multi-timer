@@ -13,6 +13,7 @@ import {
   DYNAMIC_FOG_LIGHT_METADATA_KEY,
   TIMER_METADATA_KEY,
 } from "./extensionKeys";
+import { focusViewportOnItems } from "./viewportUtils";
 
 const restartIconUrl = `${import.meta.env.BASE_URL}restart.svg`;
 const removeTimerIconUrl = `${import.meta.env.BASE_URL}remove-timer.svg`;
@@ -212,6 +213,19 @@ function App() {
     }
   };
 
+  const centerOnTimer = async (timer: TimerRow) => {
+    try {
+      await focusViewportOnItems([timer.id]);
+    } catch (error) {
+      if (isMissingSceneError(error)) {
+        setHasScene(false);
+        return;
+      }
+
+      console.error("Failed to center viewport on timer", error);
+    }
+  };
+
   const sortedTimers = useMemo(() => {
     if (nowMs <= 0) return timers;
     return sortTimersByRemaining(timers, nowMs);
@@ -400,7 +414,14 @@ function App() {
               return (
                 <li key={timer.id} className="timer-list-item">
                   <div className="timer-header">
-                    <div className="timer-name">{timer.name}</div>
+                    <button
+                      type="button"
+                      className="timer-name-button"
+                      onClick={() => void centerOnTimer(timer)}
+                      title={`Center view on ${timer.name}`}
+                    >
+                      {timer.name}
+                    </button>
                     {canManageTimer && (
                       <button
                         type="button"
