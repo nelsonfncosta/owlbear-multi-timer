@@ -9,6 +9,42 @@
   padding: 12px;
 }
 
+.timer-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 28px;
+}
+
+.timer-bug-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.timer-bug-link:hover {
+  opacity: 0.75;
+}
+
+.timer-bug-link img {
+  width: 18px;
+  height: 18px;
+  display: block;
+  filter: brightness(0) invert(1);
+}
+
+.timer-panel-divider {
+  height: 1px;
+  margin: 8px 0 8px;
+  background: currentColor;
+  opacity: 0.25;
+}
+
 .timer-config-panel {
   min-height: 100%;
   padding: 16px;

@@ -16,6 +16,7 @@ import {
 
 const restartIconUrl = `${import.meta.env.BASE_URL}restart.svg`;
 const removeTimerIconUrl = `${import.meta.env.BASE_URL}remove-timer.svg`;
+const bugIconUrl = `${import.meta.env.BASE_URL}bug.svg`;
 
 type TimerMetadata = {
   duration?: unknown;
@@ -370,6 +371,20 @@ function App() {
   return (
     <>
       <section ref={sectionRef} className="timer-panel">
+        <header className="timer-panel-header">
+          <strong>Timers</strong>
+          <a
+            href="https://github.com/nelsonfncosta/owlbear-multi-timer/issues"
+            target="_blank"
+            rel="noreferrer"
+            className="timer-bug-link"
+            title="Report a bug"
+            aria-label="Report a bug"
+          >
+            <img src={bugIconUrl} alt="" aria-hidden="true" />
+          </a>
+        </header>
+        <div className="timer-panel-divider" />
         {!isReady && <p>Connecting to Owlbear...</p>}
         {isReady && !hasScene && <p>Open a scene to view timers.</p>}
         {isReady && timers.length === 0 && <p>No timers configured.</p>}
