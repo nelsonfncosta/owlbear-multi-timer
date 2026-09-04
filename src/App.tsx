@@ -22,7 +22,12 @@ type TimerMetadata = {
   startedAtMs?: unknown;
   endsAtMs?: unknown;
   pausedAtMs?: unknown;
+  lightBeforeCompletion?: unknown;
 };
+
+function isMetadataObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 
 function App() {
   const sectionRef = useRef<HTMLElement | null>(null);
@@ -167,8 +172,16 @@ function App() {
             startedAtMs: now,
             endsAtMs: now + durationMs,
           };
-          delete (item.metadata[TIMER_METADATA_KEY] as { pausedAtMs?: number })
+
+          const previousLight = metadata.lightBeforeCompletion;
+          if (isMetadataObject(previousLight)) {
+            item.metadata[DYNAMIC_FOG_LIGHT_METADATA_KEY] = previousLight;
+          }
+
+          delete (item.metadata[TIMER_METADATA_KEY] as TimerMetadata)
             .pausedAtMs;
+          delete (item.metadata[TIMER_METADATA_KEY] as TimerMetadata)
+            .lightBeforeCompletion;
         });
       });
     } catch (error) {
@@ -310,12 +323,34 @@ function App() {
             .updateItems([timer.id], (items) => {
               items.forEach((item) => {
                 if (lightBehavior === "OFF") {
+                  const light = item.metadata[DYNAMIC_FOG_LIGHT_METADATA_KEY];
+                  const timerMetadata = item.metadata[TIMER_METADATA_KEY];
+                  if (
+                    isMetadataObject(light) &&
+                    isMetadataObject(timerMetadata)
+                  ) {
+                    item.metadata[TIMER_METADATA_KEY] = {
+                      ...timerMetadata,
+                      lightBeforeCompletion: { ...light },
+                    };
+                  }
+
                   delete item.metadata[DYNAMIC_FOG_LIGHT_METADATA_KEY];
                   return;
                 }
 
                 const light = item.metadata[DYNAMIC_FOG_LIGHT_METADATA_KEY];
                 if (typeof light !== "object" || light === null) return;
+
+                const timerMetadata = item.metadata[TIMER_METADATA_KEY];
+                if (isMetadataObject(timerMetadata)) {
+                  item.metadata[TIMER_METADATA_KEY] = {
+                    ...timerMetadata,
+                    lightBeforeCompletion: {
+                      ...(light as Record<string, unknown>),
+                    },
+                  };
+                }
 
                 item.metadata[DYNAMIC_FOG_LIGHT_METADATA_KEY] = {
                   ...(light as Record<string, unknown>),
