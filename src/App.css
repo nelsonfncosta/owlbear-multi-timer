@@ -31,11 +31,16 @@
   opacity: 0.75;
 }
 
+.timer-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .timer-bug-link img {
   width: 18px;
   height: 18px;
   display: block;
-  filter: brightness(0) invert(1);
 }
 
 .timer-panel-divider {

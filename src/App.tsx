@@ -18,6 +18,7 @@ import { focusViewportOnItems } from "./viewportUtils";
 const restartIconUrl = `${import.meta.env.BASE_URL}restart.svg`;
 const removeTimerIconUrl = `${import.meta.env.BASE_URL}remove-timer.svg`;
 const bugIconUrl = `${import.meta.env.BASE_URL}bug.svg`;
+const coffeeIconUrl = `${import.meta.env.BASE_URL}coffee.svg`;
 
 type TimerMetadata = {
   duration?: unknown;
@@ -387,16 +388,28 @@ function App() {
       <section ref={sectionRef} className="timer-panel">
         <header className="timer-panel-header">
           <strong>Timers</strong>
-          <a
-            href="https://github.com/nelsonfncosta/owlbear-multi-timer/issues"
-            target="_blank"
-            rel="noreferrer"
-            className="timer-bug-link"
-            title="Report a bug"
-            aria-label="Report a bug"
-          >
-            <img src={bugIconUrl} alt="" aria-hidden="true" />
-          </a>
+          <div className="timer-header-actions">
+            <a
+              href="https://ko-fi.com/nelsoncosta"
+              target="_blank"
+              rel="noreferrer"
+              className="timer-bug-link"
+              title="Coffee delivery"
+              aria-label="Support Multi Timer on Ko-fi"
+            >
+              <img src={coffeeIconUrl} alt="" aria-hidden="true" />
+            </a>
+            <a
+              href="https://github.com/nelsonfncosta/owlbear-multi-timer/issues"
+              target="_blank"
+              rel="noreferrer"
+              className="timer-bug-link"
+              title="Report a bug"
+              aria-label="Report a bug"
+            >
+              <img src={bugIconUrl} alt="" aria-hidden="true" />
+            </a>
+          </div>
         </header>
         <div className="timer-panel-divider" />
         {!isReady && <p>Connecting to Owlbear...</p>}

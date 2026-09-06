@@ -30,4 +30,4 @@ Multi Timer lets you attach shared countdown timers to character and prop items 
 
 Select a character or prop, open the context menu and configure a new timer. Open the Multi Timer action to monitor all configured timers in the scene.
 
-For bug reports and feature requests, visit the [project issue tracker](https://github.com/nelsonfncosta/owlbear-multi-timer/issues).
+For bug reports and feature requests, visit the [project issue tracker](https://github.com/nelsonfncosta/owlbear-multi-timer/issues). If Multi Timer is useful to you, you can [support its development on Ko-fi](https://ko-fi.com/nelsoncosta).
