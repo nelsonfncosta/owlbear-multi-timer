@@ -47,10 +47,68 @@
 
 .timer-config-panel {
   min-height: 100%;
-  padding: 16px;
+  padding: 8px 16px;
   display: grid;
   gap: 12px;
   box-sizing: border-box;
+}
+
+.timer-duration-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 16px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  outline: none;
+}
+
+.timer-duration-input:focus {
+  border-color: #b58cff;
+  box-shadow: 0 0 0 1px #b58cff;
+}
+
+.timer-light-setting {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.timer-light-setting legend {
+  padding: 0;
+  margin-bottom: 4px;
+}
+
+.timer-light-options {
+  display: flex;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+}
+
+.timer-light-options button {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.timer-light-options button:last-child {
+  border-right: 0;
+}
+
+.timer-light-options button:hover,
+.timer-light-options button.is-selected {
+  background: rgba(255, 255, 255, 0.16);
 }
 
 .timer-list {
@@ -81,7 +139,6 @@
   justify-content: center;
   gap: 8px;
   width: 100%;
-  margin-top: 4px;
   padding: 4px 5px;
   border: 0;
   border-radius: 16px;

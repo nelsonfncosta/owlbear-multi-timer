@@ -144,6 +144,7 @@ function TimerConfigApp() {
           <label style={{ display: "grid", gap: 4 }}>
             Duration (minutes)
             <input
+              className="timer-duration-input"
               type="number"
               min="0.01"
               step="any"
@@ -152,19 +153,30 @@ function TimerConfigApp() {
               autoFocus
             />
           </label>
-          <label style={{ display: "grid", gap: 4 }}>
-            When the timer ends
-            <select
-              value={lightBehavior}
-              onChange={(event) =>
-                setLightBehavior(event.target.value as LightBehavior)
-              }
-            >
-              <option value="NONE">Keep light unchanged</option>
-              <option value="DIM">Leave a small glow</option>
-              <option value="OFF">Turn light off</option>
-            </select>
-          </label>
+          <fieldset className="timer-light-setting">
+            <legend>When the timer ends</legend>
+            <div className="timer-light-options" role="group">
+              {(
+                [
+                  ["NONE", "Keep"],
+                  ["DIM", "Dim"],
+                  ["OFF", "Off"],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  className={
+                    lightBehavior === value ? "is-selected" : undefined
+                  }
+                  aria-pressed={lightBehavior === value}
+                  onClick={() => setLightBehavior(value)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </fieldset>
         </>
       )}
       {isReadOnly && (
