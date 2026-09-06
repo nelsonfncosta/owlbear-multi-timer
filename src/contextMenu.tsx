@@ -26,7 +26,7 @@ export function setupContextMenu() {
     ],
     embed: {
       url: `${import.meta.env.BASE_URL}${TIMER_CONFIG_POPOVER_URL}`,
-      height: 210,
+      height: 130,
     },
     onClick() {},
   });

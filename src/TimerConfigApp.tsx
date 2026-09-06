@@ -6,9 +6,15 @@ import "./App.css";
 
 type LightBehavior = "NONE" | "DIM" | "OFF";
 
+const lightOptionIcons: Record<LightBehavior, string> = {
+  NONE: `${import.meta.env.BASE_URL}light-keep.svg`,
+  DIM: `${import.meta.env.BASE_URL}light-dim.svg`,
+  OFF: `${import.meta.env.BASE_URL}light-off.svg`,
+};
+
 function TimerConfigApp() {
   const [duration, setDuration] = useState("10");
-  const [lightBehavior, setLightBehavior] = useState<LightBehavior>("DIM");
+  const [lightBehavior, setLightBehavior] = useState<LightBehavior>("NONE");
   const [error, setError] = useState<string>();
   const [isReady, setIsReady] = useState(false);
   const [hasExistingTimers, setHasExistingTimers] = useState(false);
@@ -140,9 +146,9 @@ function TimerConfigApp() {
     <main className="timer-config-panel">
       {!isReady && <p>Loading selection...</p>}
       {!isReadOnly && (
-        <>
-          <label style={{ display: "grid", gap: 4 }}>
-            Duration (minutes)
+        <div className="timer-config-settings">
+          <label className="timer-duration-setting">
+            <span>Duration</span>
             <input
               className="timer-duration-input"
               type="number"
@@ -154,7 +160,7 @@ function TimerConfigApp() {
             />
           </label>
           <fieldset className="timer-light-setting">
-            <legend>When the timer ends</legend>
+            <legend>On timer end</legend>
             <div className="timer-light-options" role="group">
               {(
                 [
@@ -170,14 +176,20 @@ function TimerConfigApp() {
                     lightBehavior === value ? "is-selected" : undefined
                   }
                   aria-pressed={lightBehavior === value}
+                  aria-label={label}
+                  title={label}
                   onClick={() => setLightBehavior(value)}
                 >
-                  {label}
+                  <img
+                    src={lightOptionIcons[value]}
+                    alt=""
+                    aria-hidden="true"
+                  />
                 </button>
               ))}
             </div>
           </fieldset>
-        </>
+        </div>
       )}
       {isReadOnly && (
         <p role="status">This timer is managed by another player.</p>
