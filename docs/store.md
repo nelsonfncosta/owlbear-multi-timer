@@ -17,6 +17,10 @@ Multi Timer lets you attach shared countdown timers to character and prop items 
 
 ![Multi Timer running in Owlbear Rodeo](https://nelsonfncosta.github.io/owlbear-multi-timer/image.png)
 
+## See it in action
+
+![Multi Timer demo](https://nelsonfncosta.github.io/owlbear-multi-timer/demo-timer.gif)
+
 ## Features
 
 - Add, pause, resume, restart, and remove timers.
